@@ -39,7 +39,7 @@ TIME_DELAY = int(1000 / FPS)
 
 # Constants #
 sx=0
-sy=-20
+sy=0
 SPEED = np.array([sx, sy])
 sx_OP = 2
 sy_OP = 0
@@ -48,7 +48,7 @@ SPEED_OP = np.array([sx_OP,sy_OP])
 friction_coefficent_positive = 0.05
 friction_coefficent_negative = -0.05
 
-grafitation = 1
+Grafitation = 0.4
 
 ## Classes ##
 
@@ -65,10 +65,6 @@ class Object(pygame.sprite.Sprite):
         self.rect.center = (int(xy_center[0]), int(xy_center[1]))  # set center coords of ball
         self.mask = pygame.mask.from_surface(self.image)# creates a mask, used for collision detection (see manual about pygame.sprite.collide_mask())
         self.mass = mass  # give sprite a mass -> realistic collisions
-    
-
-        
-        
         
 class Player(Object):
     def __init__(self, img_path, xy_center, v, mass):
@@ -107,11 +103,16 @@ class Player(Object):
                 self.vx = (1/vector_lenght) * self.vx * \
                 (vector_lenght-self.friction_negative)
                 self.vx = 0
+
+        if self.movement == "up":
+            self.vy = -2
+
+        if self.vy < 0:
+            self.vy = self.vy + Grafitation
             
+        self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
         self.rect.center = (self.X, self.Y)
-
-
 
 class Platform(Object):
     def __init__(self, img_path, xy_center, v,mass):
@@ -138,7 +139,6 @@ class Game:
         self.screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
         self.win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
-        
         pygame.display.set_caption("Jump_and_run")  # Game title
 
     def quit(self):
@@ -147,14 +147,15 @@ class Game:
     
     def play(self):
 
-        player= Player(os.path.join("data","Test_Enemy.png"),[300,300],[SPEED[0],SPEED[1]],1)
+        player= Player(os.path.join("data","Test_Enemy.png"),[350,367],[SPEED[0],SPEED[1]],1)
 
-        Platforms_position_list = [[900,600],[325, 250]]
+        Platforms_position_list = [[350,400],[325, 250]]
         platforms_list = [0, 0]
+        platforms_names_list = ["rectangle_l=900_w=20_col=0_0_0.png","rectangle_l=60_w=20_col=0_0_0.png"]
 
         for i in range(len(platforms_list)):
             platforms_list[i] = Platform(os.path.join(
-                "data", "rectangle_l=60_w=20_col=0_0_0.png"), Platforms_position_list[i],[0,0],1)
+                "data", platforms_names_list[i]), Platforms_position_list[i],[0,0],1)
 
         Platforms = pygame.sprite.Group()
         for c in platforms_list:
