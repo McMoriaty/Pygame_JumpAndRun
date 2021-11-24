@@ -15,9 +15,13 @@ from pygame.key import get_mods
 
 ### CONSTANTS ###
 
+PATH = Path("data/")
+
 # Windows #
 WIN_HEIGHT = 600
 WIN_WIDTH = 800
+
+surface = pygame.display.set_mode((WIN_WIDTH,WIN_HEIGHT))
 
 # Colors #
 WHITE = (255, 255, 255)
@@ -41,7 +45,9 @@ sx_OP = 2
 sy_OP = 0
 SPEED_OP = np.array([sx_OP,sy_OP])
 
-friction_coefficent = 0.05
+friction_coefficent_positive = 0.05
+friction_coefficent_negative = -0.05
+
 grafitation = 1
 
 ## Classes ##
@@ -59,11 +65,10 @@ class Object(pygame.sprite.Sprite):
         self.rect.center = (int(xy_center[0]), int(xy_center[1]))  # set center coords of ball
         self.mask = pygame.mask.from_surface(self.image)# creates a mask, used for collision detection (see manual about pygame.sprite.collide_mask())
         self.mass = mass  # give sprite a mass -> realistic collisions
-        
-        self.friction= mass*friction_coefficent
+    
 
-        self.X = self.rect.center[0]
-        self.Y = self.rect.center[1]
+        
+        
         
 class Player(Object):
     def __init__(self, img_path, xy_center, v, mass):
@@ -71,33 +76,49 @@ class Player(Object):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v, mass)  # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
 
-    def update():
+        self.vx = v[0]
+        self.vy = v[1]
+        self.friction_positive= mass*friction_coefficent_positive
+        self.friction_negative= mass*friction_coefficent_negative
 
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
 
-                if event.key == pygame.K_LEFT or event.type == pygame.K_a:
-                    print(1)
+        self.X = self.rect.center[0]
+        self.Y = self.rect.center[1]
 
-                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    print(2)
+        self.movement = " "
 
-            if event.type == pygame.KEYUP:
+    def update(self):
+        
+        vector_lenght = np.sqrt((self.vx**2))
 
-                if event.key == pygame.K_LEFT or event.type == pygame.K_a:
-                    print()
+        if self.movement == "left":
+            self.vx = -0.1
 
-                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    print()
+        elif self.movement == "right":
+            self.vx = 0.1
+
+        else:
+            if self.vx <= friction_coefficent_positive:
+                self.vx = (1/vector_lenght) * self.vx * \
+                (vector_lenght-self.friction_positive)
+                self.vx = 0
+            elif self.vx >= friction_coefficent_positive:
+
+                self.vx = (1/vector_lenght) * self.vx * \
+                (vector_lenght-self.friction_negative)
+                self.vx = 0
+            
+        self.X = self.X + self.vx   
+        self.rect.center = (self.X, self.Y)
 
 
 
 class Platform(Object):
-    def __init__(self, img_path, xy_center,v):
+    def __init__(self, img_path, xy_center, v,mass):
 
         # ASSIGN CLASS ATTRIBUTES
-        super().__init__(self, img_path, xy_center, v) # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
-
+        super().__init__(img_path, xy_center, v,mass)
+        
 class Background(Object):
     def __init__(self, img_path, xy_center):
         
@@ -105,9 +126,6 @@ class Background(Object):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(self, img_path, xy_center) # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
         
-
-
-
 class Game:
     # Main GAME class
 
@@ -131,18 +149,58 @@ class Game:
 
         player= Player(os.path.join("data","Test_Enemy.png"),[300,300],[SPEED[0],SPEED[1]],1)
 
-        pygame.display.update()
+        Platforms_position_list = [[900,600],[325, 250]]
+        platforms_list = [0, 0]
+
+        for i in range(len(platforms_list)):
+            platforms_list[i] = Platform(os.path.join(
+                "data", "rectangle_l=60_w=20_col=0_0_0.png"), Platforms_position_list[i],[0,0],1)
+
+        Platforms = pygame.sprite.Group()
+        for c in platforms_list:
+            Platforms.add(c)
 
         while True:
 
+            for event in pygame.event.get():
 
-            if pygame.key.get_pressed()[pygame.K_ESCAPE] == True:
-                self.quit()
+                if pygame.key.get_pressed()[pygame.K_ESCAPE] == True:
+                    self.quit()
+
+                if event.type == pygame.KEYDOWN:
+
+                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
+                        player.movement = "left"
+                        
+
+                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                        player.movement = "right"
+                        
+                    
+                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                        player.movement = "up"
+                        
+
+                if event.type == pygame.KEYUP:
+
+                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
+                        player.movement = " "
+                        
+
+                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                        player.movement = " "
+                        
+
+                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                        player.movement = " "   
 
             self.win.fill((BLUE))
             self.screen.blit(player.image,player.rect)
 
-            Player.update()
+            for i in range(len(platforms_list)):
+                pygame.draw.rect(surface, RED, platforms_list[i])
+
+            player.update()
 
             pygame.display.update()
 
