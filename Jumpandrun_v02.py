@@ -48,8 +48,8 @@ SPEED_OP = np.array([sx_OP,sy_OP])
 friction_coefficent_positive = 0.05
 friction_coefficent_negative = -0.05
 
-friction_coefficent_positive_2 = 0.05
-friction_coefficent_negative_2 = -0.05
+enemy_movement_positive = 10
+enemy_movement_negative = 10
 
 Grafitation = 2
 
@@ -73,8 +73,8 @@ class Object(pygame.sprite.Sprite):
         self.friction_positive= mass*friction_coefficent_positive
         self.friction_negative= mass*friction_coefficent_negative
 
-        self.friction_positive_2 = mass*friction_coefficent_positive_2
-        self.friction_negative_2 = mass*friction_coefficent_negative_2
+        self.friction_positive_2 = mass*friction_coefficent_positive
+        self.friction_negative_2 = mass*friction_coefficent_negative
 
         self.vx = v[0]
         self.vy = v[1]
@@ -147,6 +147,8 @@ class Enemy(Object):
         super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
         self.speed = 10
 
+
+
     def update(self):
 
         vector_lenght = np.sqrt((self.vx**2))
@@ -165,8 +167,6 @@ class Enemy(Object):
 
         if self.vx >= -9 and self.vx <= 0:
             self.vx = -10*-1
-           
-
 
         self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
@@ -207,10 +207,11 @@ class Game:
         enemys_position_list = [[400,605],[1300, 605]]
         enemys_list = [0, 0]
         enemys_names_list = ["Enemy.png","Enemy.png"]
+        enemys_speed_list = [[10,0],[-10,0]]
 
         for i in range(len(enemys_list)):
             enemys_list[i] = Enemy(os.path.join(
-                "data", enemys_names_list[i]), enemys_position_list[i],[10,0],1)
+                "data", enemys_names_list[i]), enemys_position_list[i],enemys_speed_list[i],1)
 
         Enemys = pygame.sprite.Group()
         for c in enemys_list:
@@ -218,7 +219,7 @@ class Game:
 
         ## Platform ##
 
-        Platforms_position_list = [[900,800],[900, 450]]
+        Platforms_position_list = [[900,800],[900, 500]]
         platforms_list = [0, 0]
         platforms_names_list = ["ground_Panel.png","rectangle_l=60_w=20_col=0_0_0.png"]
 
