@@ -18,8 +18,8 @@ from pygame.key import get_mods
 PATH = Path("data/")
 
 # Windows #
-WIN_HEIGHT = 600
-WIN_WIDTH = 800
+WIN_HEIGHT = 960
+WIN_WIDTH = 1728
 
 surface = pygame.display.set_mode((WIN_WIDTH,WIN_HEIGHT))
 
@@ -34,7 +34,7 @@ DARKGREEN = (0, 205, 155)
 BG_COLOR = (0, 205, 155)
 
 # Framerate #
-FPS = 20
+FPS = 40
 TIME_DELAY = int(1000 / FPS)
 
 # Constants #
@@ -48,10 +48,12 @@ SPEED_OP = np.array([sx_OP,sy_OP])
 friction_coefficent_positive = 0.05
 friction_coefficent_negative = -0.05
 
-Grafitation = 0.4
+friction_coefficent_positive_2 = 0.05
+friction_coefficent_negative_2 = -0.05
+
+Grafitation = 2
 
 ## Classes ##
-
 class Object(pygame.sprite.Sprite):
     def __init__(self, img_path, xy_center, v, mass):
 
@@ -65,6 +67,17 @@ class Object(pygame.sprite.Sprite):
         self.rect.center = (int(xy_center[0]), int(xy_center[1]))  # set center coords of ball
         self.mask = pygame.mask.from_surface(self.image)# creates a mask, used for collision detection (see manual about pygame.sprite.collide_mask())
         self.mass = mass  # give sprite a mass -> realistic collisions
+        self.X = self.rect.center[0]
+        self.Y = self.rect.center[1]
+
+        self.friction_positive= mass*friction_coefficent_positive
+        self.friction_negative= mass*friction_coefficent_negative
+
+        self.friction_positive_2 = mass*friction_coefficent_positive_2
+        self.friction_negative_2 = mass*friction_coefficent_negative_2
+
+        self.vx = v[0]
+        self.vy = v[1]
         
 class Player(Object):
     def __init__(self, img_path, xy_center, v, mass):
@@ -72,26 +85,18 @@ class Player(Object):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v, mass)  # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
 
-        self.vx = v[0]
-        self.vy = v[1]
-        self.friction_positive= mass*friction_coefficent_positive
-        self.friction_negative= mass*friction_coefficent_negative
-
-
-        self.X = self.rect.center[0]
-        self.Y = self.rect.center[1]
-
         self.movement = " "
+        self.OnPlatform = False
 
     def update(self):
         
         vector_lenght = np.sqrt((self.vx**2))
 
         if self.movement == "left":
-            self.vx = -0.1
+            self.vx = -10
 
         elif self.movement == "right":
-            self.vx = 0.1
+            self.vx = 10
 
         else:
             if self.vx <= friction_coefficent_positive:
@@ -105,9 +110,12 @@ class Player(Object):
                 self.vx = 0
 
         if self.movement == "up":
-            self.vy = -2
+            self.vy = -20
 
-        if self.vy < 0:
+        if self.OnPlatform == True:
+            self.vy =0
+
+        else:
             self.vy = self.vy + Grafitation
             
         self.Y = self.Y + self.vy
@@ -119,13 +127,52 @@ class Platform(Object):
 
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v,mass)
-        
-class Background(Object):
-    def __init__(self, img_path, xy_center):
-        
+
+class Button(Object):
+    def __init__(self, img_path, xy_center, v,mass):
 
         # ASSIGN CLASS ATTRIBUTES
-        super().__init__(self, img_path, xy_center) # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
+        super().__init__(img_path, xy_center, v,mass)
+        
+class Background(Object):
+    def __init__(self, img_path, xy_center,v,mass):
+        
+        # ASSIGN CLASS ATTRIBUTES
+        super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
+
+class Enemy(Object):
+    def __init__(self, img_path, xy_center,v,mass):
+        
+        # ASSIGN CLASS ATTRIBUTES
+        super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
+        self.speed = 10
+
+    def update(self):
+
+        vector_lenght = np.sqrt((self.vx**2))
+
+        if self.vx <= friction_coefficent_positive:
+            self.vx = (1/vector_lenght) * self.vx * \
+            (vector_lenght-self.friction_positive_2)
+
+        elif self.vx >= friction_coefficent_positive:
+            self.vx = (1/vector_lenght) * self.vx * \
+            (vector_lenght-self.friction_negative_2)
+            
+
+        if  self.vx >= 10.9:
+            self.vx = 10*-1
+
+        if self.vx >= -9 and self.vx <= 0:
+            self.vx = -10*-1
+           
+
+
+        self.Y = self.Y + self.vy
+        self.X = self.X + self.vx   
+        self.rect.center = (self.X, self.Y)
+
+
         
 class Game:
     # Main GAME class
@@ -147,11 +194,33 @@ class Game:
     
     def play(self):
 
-        player= Player(os.path.join("data","Test_Enemy.png"),[350,367],[SPEED[0],SPEED[1]],1)
+        ## Button ##
 
-        Platforms_position_list = [[350,400],[325, 250]]
+        button= Button(os.path.join("data","Playbutton.png"),[900,700],[0,0],1)
+
+        ## Player ##
+
+        player= Player(os.path.join("data","Test_Enemy.png"),[900,550],[SPEED[0],SPEED[1]],1)
+
+        ## Enemy ##
+
+        enemys_position_list = [[400,605],[1300, 605]]
+        enemys_list = [0, 0]
+        enemys_names_list = ["Enemy.png","Enemy.png"]
+
+        for i in range(len(enemys_list)):
+            enemys_list[i] = Enemy(os.path.join(
+                "data", enemys_names_list[i]), enemys_position_list[i],[10,0],1)
+
+        Enemys = pygame.sprite.Group()
+        for c in enemys_list:
+            Enemys.add(c)
+
+        ## Platform ##
+
+        Platforms_position_list = [[900,800],[900, 450]]
         platforms_list = [0, 0]
-        platforms_names_list = ["rectangle_l=900_w=20_col=0_0_0.png","rectangle_l=60_w=20_col=0_0_0.png"]
+        platforms_names_list = ["ground_Panel.png","rectangle_l=60_w=20_col=0_0_0.png"]
 
         for i in range(len(platforms_list)):
             platforms_list[i] = Platform(os.path.join(
@@ -161,50 +230,92 @@ class Game:
         for c in platforms_list:
             Platforms.add(c)
 
-        while True:
+        ## Backgrounds ##
 
+        backgrounds_list= [0, 0]
+        backgrounds_names_list = ["Planet_Meriec.png","Levels.png"]
+        backgrounds_position_list = [[900,500],[900,500]]
+
+        for i in range(len(backgrounds_list)):
+            backgrounds_list[i] = Background(os.path.join(
+                "data", backgrounds_names_list[i]), backgrounds_position_list[i],[0,0],1)
+
+        Backgrounds = pygame.sprite.Group()
+        for c in backgrounds_list:
+            Backgrounds.add(c)
+
+        while True:
+            # KEY EVENTS
             for event in pygame.event.get():
+
+                clickdetection = Rect(800,650,200,100)
 
                 if pygame.key.get_pressed()[pygame.K_ESCAPE] == True:
                     self.quit()
 
-                if event.type == pygame.KEYDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if clickdetection.collidepoint(event.pos) == 1:
 
-                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
-                        player.movement = "left"
-                        
+                        while True:
 
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                        player.movement = "right"
-                        
-                    
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
-                        player.movement = "up"
-                        
+                            for event in pygame.event.get():
 
-                if event.type == pygame.KEYUP:
+                                if pygame.key.get_pressed()[pygame.K_ESCAPE] == True:
+                                    self.quit()
 
-                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
-                        player.movement = " "
-                        
+                                if event.type == pygame.KEYDOWN:
 
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                        player.movement = " "
-                        
+                                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
+                                        player.movement = "left"    
 
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
-                        player.movement = " "   
+                                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                                        player.movement = "right"
+                                        
+                                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                                        player.OnPlatform == False 
+                                        player.movement = "up"
+                                        
 
-            self.win.fill((BLUE))
-            self.screen.blit(player.image,player.rect)
+                                if event.type == pygame.KEYUP:
 
-            for i in range(len(platforms_list)):
-                pygame.draw.rect(surface, RED, platforms_list[i])
+                                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
+                                        player.movement = " "
+                                        
+                                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                                        player.movement = " "
+                                        
+                                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                                        player.movement = " "   
 
-            player.update()
+                            self.screen.blit(backgrounds_list[1].image,backgrounds_list[1].rect)
 
-            pygame.display.update()
+                            for i in range(len(platforms_list)):
+                                pygame.draw.rect(surface, RED, platforms_list[1])
 
+                                self.screen.blit(platforms_list[0].image,platforms_list[0].rect)
+
+                                if pygame.sprite.collide_mask(platforms_list[i],player):
+                                    player.OnPlatform = True 
+
+                            for i in range(len(enemys_list)):
+
+                                self.screen.blit(enemys_list[i].image,enemys_list[i].rect)
+
+                                if pygame.sprite.collide_mask(enemys_list[i],player):
+                                    Enemys.OnPlatform = True
+                            
+                            self.screen.blit(player.image,player.rect)
+
+                            Enemys.update()
+
+                            player.update()
+
+                            pygame.display.update()
+
+                self.screen.blit(backgrounds_list[0].image,backgrounds_list[0].rect)
+                self.screen.blit(button.image,button.rect)
+
+                pygame.display.update()
 
 
 if __name__ == "__main__":
