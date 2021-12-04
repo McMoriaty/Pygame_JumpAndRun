@@ -31,7 +31,6 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 215, 0)
 DARKGREEN = (0, 205, 155)
-BG_COLOR = (0, 205, 155)
 
 # Framerate #
 FPS = 40
@@ -56,9 +55,8 @@ Grafitation = 2
 ## Classes ##
 class Object(pygame.sprite.Sprite):
     def __init__(self, img_path, xy_center, v, mass):
-
         # ASSIGN CLASS ATTRIBUTES
-        super().__init__()  # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
+        super().__init__()  # call __init__ of parent class 
         if not os.path.exists(img_path):
             raise Exception(
                 "THE FOLLOWING FILE DOES NOT EXIST: {0}".format(img_path))
@@ -67,23 +65,22 @@ class Object(pygame.sprite.Sprite):
         self.rect.center = (int(xy_center[0]), int(xy_center[1]))  # set center coords of ball
         self.mask = pygame.mask.from_surface(self.image)# creates a mask, used for collision detection (see manual about pygame.sprite.collide_mask())
         self.mass = mass  # give sprite a mass -> realistic collisions
-        self.X = self.rect.center[0]
-        self.Y = self.rect.center[1]
+        self.X = self.rect.center[0] # assing X position
+        self.Y = self.rect.center[1] # assing Y position
 
-        self.friction_positive= mass*friction_coefficent_positive
-        self.friction_negative= mass*friction_coefficent_negative
+        self.friction_positive= mass*friction_coefficent_positive # calculate friction
+        self.friction_negative= mass*friction_coefficent_negative # calculate friction
 
-        self.friction_positive_2 = mass*friction_coefficent_positive
-        self.friction_negative_2 = mass*friction_coefficent_negative
+        self.friction_positive_2 = mass*friction_coefficent_positive # calculate friction
+        self.friction_negative_2 = mass*friction_coefficent_negative # calculate friction
 
-        self.vx = v[0]
-        self.vy = v[1]
+        self.vx = v[0] # assing vx
+        self.vy = v[1] # assing vy
         
 class Player(Object):
     def __init__(self, img_path, xy_center, v, mass):
-
         # ASSIGN CLASS ATTRIBUTES
-        super().__init__(img_path, xy_center, v, mass)  # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
+        super().__init__(img_path, xy_center, v, mass)  # call __init__ of parent class 
 
         self.movement = " "
         self.OnPlatform = False
@@ -124,30 +121,23 @@ class Player(Object):
 
 class Platform(Object):
     def __init__(self, img_path, xy_center, v,mass):
-
         # ASSIGN CLASS ATTRIBUTES
-        super().__init__(img_path, xy_center, v,mass)
+        super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
 
 class Button(Object):
     def __init__(self, img_path, xy_center, v,mass):
-
         # ASSIGN CLASS ATTRIBUTES
-        super().__init__(img_path, xy_center, v,mass)
+        super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
         
 class Background(Object):
     def __init__(self, img_path, xy_center,v,mass):
-        
         # ASSIGN CLASS ATTRIBUTES
-        super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
+        super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class
 
 class Enemy(Object):
     def __init__(self, img_path, xy_center,v,mass):
-        
         # ASSIGN CLASS ATTRIBUTES
-        super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class (i.e. of pygame.sprite.Sprite)
-        self.speed = 10
-
-
+        super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class 
 
     def update(self):
 
@@ -161,7 +151,6 @@ class Enemy(Object):
             self.vx = (1/vector_lenght) * self.vx * \
             (vector_lenght-self.friction_negative_2)
             
-
         if  self.vx >= 10.9:
             self.vx = 10*-1
 
@@ -171,9 +160,7 @@ class Enemy(Object):
         self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
         self.rect.center = (self.X, self.Y)
-
-
-        
+       
 class Game:
     # Main GAME class
 
@@ -189,6 +176,7 @@ class Game:
         pygame.display.set_caption("Jump_and_run")  # Game title
 
     def quit(self):
+        # to quit game
         pygame.quit()
         sys.exit(0)
     
@@ -317,7 +305,6 @@ class Game:
                 self.screen.blit(button.image,button.rect)
 
                 pygame.display.update()
-
 
 if __name__ == "__main__":
     Game().play()  
