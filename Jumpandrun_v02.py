@@ -46,6 +46,7 @@ SPEED_OP = np.array([sx_OP,sy_OP])
 
 friction_coefficent_positive = 0.05
 friction_coefficent_negative = -0.05
+YSpeed = -20
 
 enemy_movement_positive = 10
 enemy_movement_negative = 10
@@ -76,6 +77,8 @@ class Object(pygame.sprite.Sprite):
 
         self.vx = v[0] # assing vx
         self.vy = v[1] # assing vy
+
+        self.OnPlatform = False
         
 class Player(Object):
     def __init__(self, img_path, xy_center, v, mass):
@@ -83,9 +86,12 @@ class Player(Object):
         super().__init__(img_path, xy_center, v, mass)  # call __init__ of parent class 
 
         self.movement = " "
-        self.OnPlatform = False
+        self.jumpingspeed = -20
+        
 
-    def update(self):
+    def update(self, platform):
+        x= -20
+        Grafitation_2 = Grafitation
         
         vector_lenght = np.sqrt((self.vx**2))
 
@@ -107,13 +113,22 @@ class Player(Object):
                 self.vx = 0
 
         if self.movement == "up":
-            self.vy = -20
+            self.vy = x
+            self.OnPlatform = False
+            if self.vy <= -20:
+                x = 0
+        
+        self.Y = self.Y + self.vy
 
         if self.OnPlatform == True:
-            self.vy =0
+            self.vy = 0
+            self.Y = platform.rect.top
 
         else:
-            self.vy = self.vy + Grafitation
+            self.vy = self.vy + Grafitation_2
+
+            if self.vy >= 20:
+                Grafitation_2 = 0
             
         self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
@@ -157,6 +172,12 @@ class Enemy(Object):
         if self.vx >= -9 and self.vx <= 0:
             self.vx = -10*-1
 
+        if self.OnPlatform == True:
+            self.vy = 0
+
+        else:
+            self.vy = self.vy + Grafitation
+        
         self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
         self.rect.center = (self.X, self.Y)
@@ -192,7 +213,7 @@ class Game:
 
         ## Enemy ##
 
-        enemys_position_list = [[400,605],[1300, 605]]
+        enemys_position_list = [[400,550],[1300, 550]]
         enemys_list = [0, 0]
         enemys_names_list = ["Enemy.png","Enemy.png"]
         enemys_speed_list = [[10,0],[-10,0]]
@@ -244,7 +265,7 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if clickdetection.collidepoint(event.pos) == 1:
-
+                        IndexOfCollisionPlatform = 0
                         while True:
 
                             for event in pygame.event.get():
@@ -260,8 +281,8 @@ class Game:
                                     if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                                         player.movement = "right"
                                         
-                                    if event.key == pygame.K_UP or event.key == pygame.K_w:
-                                        player.OnPlatform == False 
+                                    if event.key == pygame.K_UP or event.key == pygame.K_w and player.movement == " ":
+                                        player.OnPlatform = False 
                                         player.movement = "up"
                                         
 
@@ -285,20 +306,27 @@ class Game:
 
                                 if pygame.sprite.collide_mask(platforms_list[i],player):
                                     player.OnPlatform = True 
+                                    IndexOfCollisionPlatform = i
 
                             for i in range(len(enemys_list)):
 
-                                self.screen.blit(enemys_list[i].image,enemys_list[i].rect)
+                                if pygame.sprite.collide_mask(platforms_list[i],enemys_list[i]):
+                                    enemys_list[i].OnPlatform = True
 
-                                if pygame.sprite.collide_mask(enemys_list[i],player):
-                                    Enemys.OnPlatform = True
-                            
-                            self.screen.blit(player.image,player.rect)
+
+                            Enemys = pygame.sprite.Group()
+                            for c in enemys_list:
+                                Enemys.add(c)
+
+                            Enemys.draw(self.screen)
 
                             Enemys.update()
+                        
+                            player.update(platforms_list[IndexOfCollisionPlatform])
 
-                            player.update()
+                            self.screen.blit(player.image,player.rect)
 
+                            print(player.OnPlatform)
                             pygame.display.update()
 
                 self.screen.blit(backgrounds_list[0].image,backgrounds_list[0].rect)
