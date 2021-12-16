@@ -51,7 +51,7 @@ YSpeed = -20
 enemy_movement_positive = 10
 enemy_movement_negative = 10
 
-Grafitation = 2
+Grafitation = 1
 
 ## Classes ##
 class Object(pygame.sprite.Sprite):
@@ -91,7 +91,6 @@ class Player(Object):
 
     def update(self, platform):
         x= -20
-        Grafitation_2 = Grafitation
         
         vector_lenght = np.sqrt((self.vx**2))
 
@@ -114,22 +113,24 @@ class Player(Object):
 
         if self.movement == "up":
             self.vy = x
+            print("hello")
             self.OnPlatform = False
-            if self.vy <= -20:
+            
+            if self.vy <= -15:
+                self.movement = " "
                 x = 0
-        
-        self.Y = self.Y + self.vy
+
 
         if self.OnPlatform == True:
             self.vy = 0
             self.Y = platform.rect.top - 20
-
+        
         else:
-            self.vy = self.vy + Grafitation_2
-
-            if self.vy >= 20:
-                Grafitation_2 =0
-            
+            print(self.vy)
+            self.vy = self.vy + Grafitation
+            print(self.vy)
+ 
+        print(self.vy)
         self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
         self.rect.center = (self.X, self.Y)
@@ -196,9 +197,14 @@ class Game:
                     if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                         player.movement = "right"
                         
-                    if event.key == pygame.K_UP or event.key == pygame.K_w and player.movement == " ":
-                        player.OnPlatform = False 
-                        player.movement = "up"
+                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+
+                        if player.OnPlatform == True:
+                            player.OnPlatform = False 
+                            player.movement = "up"
+
+                        else:
+                            pass
                         
 
                 if event.type == pygame.KEYUP:
@@ -226,7 +232,6 @@ class Game:
 
             self.screen.blit(player.image,player.rect)
             
-            print(player.OnPlatform)
             pygame.display.update()
 
 
