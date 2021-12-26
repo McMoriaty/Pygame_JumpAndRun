@@ -95,10 +95,10 @@ class Player(Object):
         vector_lenght = np.sqrt((self.vx**2))
 
         if self.movement == "left":
-            self.vx = -10
+            self.vx = -5
 
         elif self.movement == "right":
-            self.vx = 10
+            self.vx = 5
 
         else:
             if self.vx <= friction_coefficent_positive:
@@ -116,21 +116,21 @@ class Player(Object):
             print("hello")
             self.OnPlatform = False
             
-            if self.vy <= -15:
+            if self.vy <= -12:
                 self.movement = " "
                 x = 0
 
-
         if self.OnPlatform == True:
-            self.vy = 0
-            self.Y = platform.rect.top - 20
+            if self.Y < platform.rect.bottom - 20:
+                self.vy = 0
+                self.Y = platform.rect.top - 20
+
+            else:
+                self.OnPlatform = False
         
-        else:
-            print(self.vy)
-            self.vy = self.vy + Grafitation
-            print(self.vy)
- 
-        print(self.vy)
+        self.Y = self.Y
+        self.vy = self.vy + Grafitation
+
         self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
         self.rect.center = (self.X, self.Y)
@@ -139,8 +139,7 @@ class Platform(Object):
     def __init__(self, img_path, xy_center, v,mass):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
-
-       
+      
 class Game:
     # Main GAME class
 
@@ -161,7 +160,6 @@ class Game:
         sys.exit(0)
     
     def play(self):
-
 
         ## Player ##
 
@@ -206,7 +204,6 @@ class Game:
                         else:
                             pass
                         
-
                 if event.type == pygame.KEYUP:
 
                     if event.key == pygame.K_LEFT or event.type == pygame.K_a:
@@ -228,12 +225,15 @@ class Game:
                     player.OnPlatform = True 
                     IndexOfCollisionPlatform = i
 
-            player.update(platforms_list[IndexOfCollisionPlatform])
+                else:
+                    if player.OnPlatform == False:
+                        Player.vy = 0
 
             self.screen.blit(player.image,player.rect)
             
-            pygame.display.update()
+            player.update(platforms_list[IndexOfCollisionPlatform])
 
+            pygame.display.update()
 
 if __name__ == "__main__":
     Game().play()  

@@ -88,18 +88,16 @@ class Player(Object):
         self.movement = " "
         self.jumpingspeed = -20
         
-
     def update(self, platform):
         x= -20
-        Grafitation_2 = Grafitation
         
         vector_lenght = np.sqrt((self.vx**2))
 
         if self.movement == "left":
-            self.vx = -10
+            self.vx = -5
 
         elif self.movement == "right":
-            self.vx = 10
+            self.vx = 5
 
         else:
             if self.vx <= friction_coefficent_positive:
@@ -114,22 +112,19 @@ class Player(Object):
 
         if self.movement == "up":
             self.vy = x
+            print("hello")
             self.OnPlatform = False
-            if self.vy <= -20:
+            
+            if self.vy <= -12:
+                self.movement = " "
                 x = 0
-        
-        self.Y = self.Y + self.vy
 
         if self.OnPlatform == True:
             self.vy = 0
-            self.Y = platform.rect.top
+            self.Y = platform.rect.top - 20
 
-        else:
-            self.vy = self.vy + Grafitation_2
+        self.vy = self.vy + Grafitation
 
-            if self.vy >= 20:
-                Grafitation_2 = 0
-            
         self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
         self.rect.center = (self.X, self.Y)
@@ -300,13 +295,16 @@ class Game:
                             self.screen.blit(backgrounds_list[1].image,backgrounds_list[1].rect)
 
                             for i in range(len(platforms_list)):
-                                pygame.draw.rect(surface, RED, platforms_list[1])
 
-                                self.screen.blit(platforms_list[0].image,platforms_list[0].rect)
+                                self.screen.blit(platforms_list[i].image,platforms_list[i].rect)
 
                                 if pygame.sprite.collide_mask(platforms_list[i],player):
                                     player.OnPlatform = True 
                                     IndexOfCollisionPlatform = i
+
+                                else:
+                                    if player.OnPlatform == False:
+                                        Player.vy = 0
 
                             for i in range(len(enemys_list)):
 
