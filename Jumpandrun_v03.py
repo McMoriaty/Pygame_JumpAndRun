@@ -113,23 +113,22 @@ class Player(Object):
 
         if self.movement == "up":
             self.vy = x
-            print("hello")
             self.OnPlatform = False
             
             if self.vy <= -12:
                 self.movement = " "
                 x = 0
 
-        if self.OnPlatform == True:
-            if self.Y < platform.rect.bottom - 20:
+        elif self.OnPlatform == True:
+            if self.Y < platform.rect.bottom - 20 :
                 self.vy = 0
                 self.Y = platform.rect.top - 20
 
             else:
                 self.OnPlatform = False
         
-        self.Y = self.Y
         self.vy = self.vy + Grafitation
+        print(self.vy)
 
         self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
@@ -139,7 +138,36 @@ class Platform(Object):
     def __init__(self, img_path, xy_center, v,mass):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
-      
+
+class Enemy(Object):
+    def __init__(self, img_path, xy_center,v,mass):
+        # ASSIGN CLASS ATTRIBUTES
+        super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class 
+        self.time = 0
+
+    def update(self, platform):
+        if self.time == 500:
+            self.vx = self.vx * -1
+            self.time = 0
+
+        if self.OnPlatform == True:
+            if self.Y < platform.rect.bottom - 20 :
+                self.vy = 0
+                self.Y = platform.rect.top - 20
+
+            else:
+                self.OnPlatform = False
+
+        self.time += 1
+        
+        print(self.time)
+        
+        self.vy = self.vy + Grafitation
+
+        self.Y = self.Y + self.vy
+        self.X = self.X + self.vx   
+        self.rect.center = (self.X, self.Y)
+  
 class Game:
     # Main GAME class
 
@@ -179,9 +207,24 @@ class Game:
         for c in platforms_list:
             Platforms.add(c)
 
+        ## Enemy ##
+
+        enemys_position_list = [[400,550],[1300, 550],[800, 550]]
+        enemys_list = [0, 0,0]
+        enemys_speed_list = [[0.8,0],[-0.8,0],[-0.8,0]]
+
+        for i in range(len(enemys_list)):
+            enemys_list[i] = Enemy(os.path.join(
+                "data", "Enemy.png"), enemys_position_list[i],enemys_speed_list[i],1)
+
+        Enemys = pygame.sprite.Group()
+        for c in enemys_list:
+            Enemys.add(c)
+
         
         while True:
             IndexOfCollisionPlatform = 0
+            IndexOfCollisionPlatform_2 = 0
             for event in pygame.event.get():
 
                 if pygame.key.get_pressed()[pygame.K_ESCAPE] == True:
@@ -225,10 +268,16 @@ class Game:
                     player.OnPlatform = True 
                     IndexOfCollisionPlatform = i
 
-                else:
-                    if player.OnPlatform == False:
-                        Player.vy = 0
-
+            for i in range(len(enemys_list)):
+                for b in range(len(platforms_list)):
+                    if pygame.sprite.collide_mask(platforms_list[b],enemys_list[i]):
+                        enemys_list[i].OnPlatform = True
+                        IndexOfCollisionPlatform_2 = b
+                
+                Enemys.update(platforms_list[IndexOfCollisionPlatform_2])
+                    
+            Enemys.draw(self.screen)
+                           
             self.screen.blit(player.image,player.rect)
             
             player.update(platforms_list[IndexOfCollisionPlatform])

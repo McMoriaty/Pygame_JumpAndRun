@@ -298,13 +298,13 @@ class Game:
 
                                 self.screen.blit(platforms_list[i].image,platforms_list[i].rect)
 
-                                if pygame.sprite.collide_mask(platforms_list[i],player):
-                                    player.OnPlatform = True 
-                                    IndexOfCollisionPlatform = i
+                            if pygame.sprite.collide_mask(platforms_list[i],player):
+                                player.OnPlatform = True 
+                                IndexOfCollisionPlatform = i
 
-                                else:
-                                    if player.OnPlatform == False:
-                                        Player.vy = 0
+                            else:
+                                if player.OnPlatform == False:
+                                    Player.vy = 0
 
                             for i in range(len(enemys_list)):
 
