@@ -48,9 +48,6 @@ friction_coefficent_positive = 0.05
 friction_coefficent_negative = -0.05
 YSpeed = -20
 
-enemy_movement_positive = 10
-enemy_movement_negative = 10
-
 Grafitation = 1
 
 ## Classes ##
@@ -79,7 +76,12 @@ class Object(pygame.sprite.Sprite):
         self.vy = v[1] # assing vy
 
         self.OnPlatform = False
-        
+        self.killed = False
+        self.tour = True
+
+        self.killed = False
+        self.dead = False
+
 class Player(Object):
     def __init__(self, img_path, xy_center, v, mass):
         # ASSIGN CLASS ATTRIBUTES
@@ -87,8 +89,8 @@ class Player(Object):
 
         self.movement = " "
         self.jumpingspeed = -20
+        self.flip = False
         
-
     def update(self, platform):
         x= -20
         
@@ -111,6 +113,9 @@ class Player(Object):
                 (vector_lenght-self.friction_negative)
                 self.vx = 0
 
+        if self.movement == "shoot":
+            pass
+
         if self.movement == "up":
             self.vy = x
             self.OnPlatform = False
@@ -128,7 +133,6 @@ class Player(Object):
                 self.OnPlatform = False
         
         self.vy = self.vy + Grafitation
-        print(self.vy)
 
         self.Y = self.Y + self.vy
         self.X = self.X + self.vx   
@@ -160,8 +164,6 @@ class Enemy(Object):
 
         self.time += 1
         
-        print(self.time)
-        
         self.vy = self.vy + Grafitation
 
         self.Y = self.Y + self.vy
@@ -190,11 +192,9 @@ class Game:
     def play(self):
 
         ## Player ##
-
         player= Player(os.path.join("data","Test_Enemy.png"),[900,550],[SPEED[0],SPEED[1]],1)
 
         ## Platform ##
-
         Platforms_position_list = [[900,800],[900, 500], [800, 400]]
         platforms_list = [0, 0, 0]
         platforms_names_list = ["ground_Panel.png","rectangle_l=60_w=20_col=0_0_0.png","rectangle_l=60_w=20_col=0_0_0.png"]
@@ -208,7 +208,6 @@ class Game:
             Platforms.add(c)
 
         ## Enemy ##
-
         enemys_position_list = [[400,550],[1300, 550],[800, 550]]
         enemys_list = [0, 0,0]
         enemys_speed_list = [[0.8,0],[-0.8,0],[-0.8,0]]
@@ -233,10 +232,12 @@ class Game:
                 if event.type == pygame.KEYDOWN:
 
                     if event.key == pygame.K_LEFT or event.type == pygame.K_a:
-                        player.movement = "left"    
+                        player.movement = "left"   
+                        player.flip = True 
 
                     if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                         player.movement = "right"
+                        player.flip = False
                         
                     if event.key == pygame.K_UP or event.key == pygame.K_w:
 
@@ -246,6 +247,9 @@ class Game:
 
                         else:
                             pass
+                    
+                    if event.key == pygame.K_LSHIFT:
+                        player.movement = "shoot"
                         
                 if event.type == pygame.KEYUP:
 
@@ -257,6 +261,9 @@ class Game:
                         
                     if event.key == pygame.K_UP or event.key == pygame.K_w:
                         player.movement = " "   
+
+                    if event.key == pygame.K_LSHIFT:
+                        player.movement = " "
 
             self.win.fill((BLUE))
 
@@ -273,13 +280,26 @@ class Game:
                     if pygame.sprite.collide_mask(platforms_list[b],enemys_list[i]):
                         enemys_list[i].OnPlatform = True
                         IndexOfCollisionPlatform_2 = b
-                
-                Enemys.update(platforms_list[IndexOfCollisionPlatform_2])
-                    
+
+                Enemys.update(platforms_list[IndexOfCollisionPlatform_2])  
+
+            b = 0
+            while b < len(enemys_list):
+                if pygame.sprite.collide_mask(player,enemys_list[b]):
+                    enemys_list.pop(b)
+
+                else:
+                    b = len(enemys_list)
+
+            Enemys = pygame.sprite.Group()
+            for c in enemys_list:
+                Enemys.add(c)
+
+            print(player.flip)
+
             Enemys.draw(self.screen)
-                           
-            self.screen.blit(player.image,player.rect)
-            
+         
+            self.screen.blit(pygame.transform.flip(player.image, player.flip, False), player.rect)
             player.update(platforms_list[IndexOfCollisionPlatform])
 
             pygame.display.update()
