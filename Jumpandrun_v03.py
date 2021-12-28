@@ -15,12 +15,15 @@ from pygame.key import get_mods
 
 ### CONSTANTS ###
 
-PATH = Path("data/")
+PATH = Path("data")
 
 # Windows #
 WIN_HEIGHT = 800
 WIN_WIDTH = 1000
 
+# MIN and MAX Random
+BoarderL = 20
+BoarderR = 980
 
 surface = pygame.display.set_mode((WIN_WIDTH,WIN_HEIGHT))
 
@@ -44,6 +47,8 @@ SPEED = np.array([sx, sy])
 sx_OP = 2
 sy_OP = 0
 SPEED_OP = np.array([sx_OP,sy_OP])
+
+MAX_PLATFORMS = 10
 
 friction_coefficent_positive = 0.05
 friction_coefficent_negative = -0.05
@@ -110,11 +115,11 @@ class Player(Object):
         
         vector_lenght = np.sqrt((self.vx**2))
 
-        if self.movement == "left"and self.X >= 20:
-            self.vx = -5
+        if self.movement == "left"and self.X >= BoarderL:
+            self.vx = -2
 
-        elif self.movement == "right" and self.X <= 980:
-            self.vx = 5
+        elif self.movement == "right" and self.X <= BoarderR:
+            self.vx = 2
 
         else:
             if self.vx <= friction_coefficent_positive:
@@ -175,7 +180,7 @@ class Enemy(Object):
             self.vx = self.vx * -1
             self.time = 0
 
-        elif self.X <= 10 and self.X >= 990:
+        elif self.X <= BoarderL and self.X >= BoarderR:
             self.vx = self.vx * -1
             self.time = 0
             
@@ -217,7 +222,7 @@ class Game:
     def play(self):
 
         ## Player ##
-        player= Player(os.path.join("data","FigtherJumpanrunGame.png"),[900,550],[SPEED[0],SPEED[1]],1)
+        player= Player(os.path.join(PATH,"FigtherJumpanrunGame.png"),[900,550],[SPEED[0],SPEED[1]],1)
 
         ## Platform ##
         Platforms_position_list = [[900,900], [900, 600], [800, 500]]
@@ -226,21 +231,24 @@ class Game:
 
         for i in range(len(platforms_list)):
             platforms_list[i] = Platform(os.path.join(
-                "data", platforms_names_list[i]), Platforms_position_list[i],[0,0],1)
+                PATH, platforms_names_list[i]), Platforms_position_list[i],[0,0],1)
 
-        Platforms = pygame.sprite.Group()
-        for c in platforms_list:
-            Platforms.add(c)
+        # create Platform Sprite Group
+        """Platforms = pygame.sprite.Group()
+        for c in range(MAX_PLATFORMS):
+            randomX_position = random.randint(BoarderL, BoarderR)
+            Platforms.add(c)"""
 
         ## Enemy ##
-        enemys_position_list = [[400,550],[990, 550],[800, 550]]
-        enemys_list = [0, 0,0]
+        enemys_position_list = [[400,550],[600, 550],[800, 550]]
+        enemys_list = [0, 0, 0]
         enemys_speed_list = [[0.8,0],[-0.8,0],[-0.8,0]]
 
         for i in range(len(enemys_list)):
             enemys_list[i] = Enemy(os.path.join(
-                "data", "Enemy.png"), enemys_position_list[i],enemys_speed_list[i],1)
+                PATH, "Enemy.png"), enemys_position_list[i],enemys_speed_list[i],1)
 
+        # create Enemys Sprite Group
         Enemys = pygame.sprite.Group()
         for c in enemys_list:
             Enemys.add(c)
