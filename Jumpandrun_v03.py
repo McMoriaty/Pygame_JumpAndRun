@@ -48,6 +48,8 @@ sx_OP = 2
 sy_OP = 0
 SPEED_OP = np.array([sx_OP,sy_OP])
 
+
+
 MAX_PLATFORMS = 10
 platforms_list = [0,0,0,0,0,0,0,0,0,0,0]
 
@@ -57,7 +59,7 @@ YSpeed = -20
 
 Grafitation = 1
 
-TEXT_SIZE = 50
+TEXT_SIZE = 20
 size = [WIN_WIDTH, WIN_HEIGHT]
 screen = pygame.display.set_mode(size)
 
@@ -163,12 +165,6 @@ class Platform(Object):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
 
-class Bullet(Object):
-    def __init__(self, img_path, xy_center, v,mass):
-        # ASSIGN CLASS ATTRIBUTES
-        super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
-
-
 
 class Enemy(Object):
     def __init__(self, img_path, xy_center,v,mass):
@@ -257,12 +253,11 @@ class Game:
         for c in enemys_list:
             Enemys.add(c)
 
-        
+        Score = 0
         while True:
             IndexOfCollisionPlatform = 0
             IndexOfCollisionPlatform_2 = 0
-            Score = 0
-
+            
             for event in pygame.event.get():
 
                 if pygame.key.get_pressed()[pygame.K_ESCAPE] == True:
@@ -327,7 +322,6 @@ class Game:
                 if pygame.sprite.collide_mask(player,enemys_list[b]):
                     enemys_list.pop(b)
                     Score += 50
-
                 else:
                     b = len(enemys_list)
 
@@ -340,7 +334,7 @@ class Game:
             self.screen.blit(pygame.transform.flip(player.image, player.flip, False), player.rect)
             player.update(platforms_list[IndexOfCollisionPlatform])
 
-            draw_text("Score" + str(Score), 1000, 1000, BLACK)
+            draw_text("Score" + " " + str(Score), 500, 80, BLACK)
 
             pygame.display.update()
 
