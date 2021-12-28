@@ -18,8 +18,9 @@ from pygame.key import get_mods
 PATH = Path("data/")
 
 # Windows #
-WIN_HEIGHT = 960
-WIN_WIDTH = 1728
+WIN_HEIGHT = 800
+WIN_WIDTH = 1000
+
 
 surface = pygame.display.set_mode((WIN_WIDTH,WIN_HEIGHT))
 
@@ -49,6 +50,19 @@ friction_coefficent_negative = -0.05
 YSpeed = -20
 
 Grafitation = 1
+
+TEXT_SIZE = 50
+size = [WIN_WIDTH, WIN_HEIGHT]
+screen = pygame.display.set_mode(size)
+
+### FUNCTIONS ###
+def draw_text(text, x, y, color):
+    font = pygame.font.SysFont("arial", TEXT_SIZE)
+    y_pos = y
+    x_pos = x
+    text = font.render(text, 1, color)
+    screen.blit(text, (x_pos, y_pos))
+    pygame.display.update()
 
 ## Classes ##
 class Object(pygame.sprite.Sprite):
@@ -96,10 +110,10 @@ class Player(Object):
         
         vector_lenght = np.sqrt((self.vx**2))
 
-        if self.movement == "left":
+        if self.movement == "left"and self.X >= 20:
             self.vx = -5
 
-        elif self.movement == "right":
+        elif self.movement == "right" and self.X <= 980:
             self.vx = 5
 
         else:
@@ -125,9 +139,9 @@ class Player(Object):
                 x = 0
 
         elif self.OnPlatform == True:
-            if self.Y < platform.rect.bottom - 20 :
+            if self.Y < platform.rect.top :
                 self.vy = 0
-                self.Y = platform.rect.top - 20
+                self.Y = platform.rect.top - 28
 
             else:
                 self.OnPlatform = False
@@ -143,6 +157,13 @@ class Platform(Object):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
 
+class Bullet(Object):
+    def __init__(self, img_path, xy_center, v,mass):
+        # ASSIGN CLASS ATTRIBUTES
+        super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
+
+
+
 class Enemy(Object):
     def __init__(self, img_path, xy_center,v,mass):
         # ASSIGN CLASS ATTRIBUTES
@@ -154,10 +175,14 @@ class Enemy(Object):
             self.vx = self.vx * -1
             self.time = 0
 
+        elif self.X <= 10 and self.X >= 990:
+            self.vx = self.vx * -1
+            self.time = 0
+            
         if self.OnPlatform == True:
-            if self.Y < platform.rect.bottom - 20 :
+            if self.Y < platform.rect.bottom - 15 :
                 self.vy = 0
-                self.Y = platform.rect.top - 20
+                self.Y = platform.rect.top - 15
 
             else:
                 self.OnPlatform = False
@@ -192,10 +217,10 @@ class Game:
     def play(self):
 
         ## Player ##
-        player= Player(os.path.join("data","Test_Enemy.png"),[900,550],[SPEED[0],SPEED[1]],1)
+        player= Player(os.path.join("data","FigtherJumpanrunGame.png"),[900,550],[SPEED[0],SPEED[1]],1)
 
         ## Platform ##
-        Platforms_position_list = [[900,800],[900, 500], [800, 400]]
+        Platforms_position_list = [[900,900], [900, 600], [800, 500]]
         platforms_list = [0, 0, 0]
         platforms_names_list = ["ground_Panel.png","rectangle_l=60_w=20_col=0_0_0.png","rectangle_l=60_w=20_col=0_0_0.png"]
 
@@ -208,7 +233,7 @@ class Game:
             Platforms.add(c)
 
         ## Enemy ##
-        enemys_position_list = [[400,550],[1300, 550],[800, 550]]
+        enemys_position_list = [[400,550],[990, 550],[800, 550]]
         enemys_list = [0, 0,0]
         enemys_speed_list = [[0.8,0],[-0.8,0],[-0.8,0]]
 
@@ -224,6 +249,8 @@ class Game:
         while True:
             IndexOfCollisionPlatform = 0
             IndexOfCollisionPlatform_2 = 0
+            Score = 0
+
             for event in pygame.event.get():
 
                 if pygame.key.get_pressed()[pygame.K_ESCAPE] == True:
@@ -231,11 +258,11 @@ class Game:
 
                 if event.type == pygame.KEYDOWN:
 
-                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
+                    if event.key == pygame.K_LEFT:
                         player.movement = "left"   
                         player.flip = True 
 
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    if event.key == pygame.K_RIGHT:
                         player.movement = "right"
                         player.flip = False
                         
@@ -287,6 +314,7 @@ class Game:
             while b < len(enemys_list):
                 if pygame.sprite.collide_mask(player,enemys_list[b]):
                     enemys_list.pop(b)
+                    Score += 50
 
                 else:
                     b = len(enemys_list)
@@ -295,12 +323,12 @@ class Game:
             for c in enemys_list:
                 Enemys.add(c)
 
-            print(player.flip)
-
             Enemys.draw(self.screen)
          
             self.screen.blit(pygame.transform.flip(player.image, player.flip, False), player.rect)
             player.update(platforms_list[IndexOfCollisionPlatform])
+
+            draw_text("Score" + str(Score), 1000, 1000, BLACK)
 
             pygame.display.update()
 

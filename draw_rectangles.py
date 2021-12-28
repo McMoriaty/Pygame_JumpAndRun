@@ -38,4 +38,4 @@ def draw_bmp_Platform(lenght,widht, color):
 
 
 if __name__ == "__main__":
-    draw_bmp_Platform(60,20, BLACK)
+    draw_bmp_Platform(40,800, BLACK)
