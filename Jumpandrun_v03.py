@@ -48,8 +48,6 @@ sx_OP = 2
 sy_OP = 0
 SPEED_OP = np.array([sx_OP,sy_OP])
 
-
-
 MAX_PLATFORMS = 10
 platforms_list = [0,0,0,0,0,0,0,0,0,0,0]
 
@@ -101,7 +99,6 @@ class Object(pygame.sprite.Sprite):
         self.vy = v[1] # assing vy
 
         self.OnPlatform = False
-        self.killed = False
         self.tour = True
 
         self.killed = False
@@ -252,7 +249,6 @@ class Game:
         # create screen which will display everything
         self.screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
         self.win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
-
         pygame.display.set_caption("Jump_and_run")  # Game title
 
     def quit(self):
@@ -265,7 +261,7 @@ class Game:
         cooltime = time.time()
 
         ## Player ##
-        Players = pygame.sprite.Group()
+        Players = pygame.sprite.Group() # create Players Sprite Group
         player = Player(os.path.join(PATH,"FigtherJumpanrunGame.png"),[900,550],[SPEED[0],SPEED[1]],1,10)
         Players.add(player)
 
@@ -273,7 +269,7 @@ class Game:
         Bullets = pygame.sprite.Group()
 
         ## Heart ##
-        Hearts = pygame.sprite.Group()
+        Hearts = pygame.sprite.Group()  # create Hearts Sprite Group
         hearts_position_list = [[450,50],[500,50],[550,50]]
 
         for i in range(3):
@@ -298,13 +294,12 @@ class Game:
             PATH, "ground_Panel.png"), [900,900],[0,0],1,28)
 
         # create Platform Sprite Group
-        Platforms = pygame.sprite.Group()
+        Platforms = pygame.sprite.Group()  # create Platforms Sprite Group
         for c in platforms_list:
             Platforms.add(c)
 
         ## Enemy ##
-        # create Enemys Sprite Group
-        Enemys = pygame.sprite.Group()
+        Enemys = pygame.sprite.Group() # create Enemys Sprite Group
         Enemys_xSpeed = 1
 
         for i in range(4):
@@ -324,7 +319,7 @@ class Game:
             backgrounds_list[i] = Background(os.path.join(
                 "data", backgrounds_names_list[i]), backgrounds_position_list[i],[0,0],1)
 
-        Backgrounds = pygame.sprite.Group()
+        Backgrounds = pygame.sprite.Group() #create Backgrounds Sprite Group
         for c in backgrounds_list:
             Backgrounds.add(c)
 
@@ -340,7 +335,6 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if clickdetection.collidepoint(event.pos) == 1:
                         IndexOfCollisionPlatform = 0
-
                         GameOver = False
                         Score = 0
 
@@ -449,7 +443,6 @@ class Game:
                                 draw_text("GAME OVER", 480, 400, WHITE)
                                 #draw_text("Score" + " " + str(Score), 480, 500, WHITE)
                                 
-                                
                             else:
                                 self.screen.blit(backgrounds_list[1].image,backgrounds_list[1].rect)
                                 Platforms.draw(self.screen)
@@ -464,7 +457,6 @@ class Game:
                                 draw_text("Score" + " " + str(Score), 890, 20, WHITE)
 
                             pygame.display.update()
-
 
                 self.screen.blit(backgrounds_list[0].image,backgrounds_list[0].rect)
                 self.screen.blit(button.image,button.rect)
