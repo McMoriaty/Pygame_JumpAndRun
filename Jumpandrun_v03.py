@@ -53,6 +53,9 @@ SPEED_OP = np.array([sx_OP,sy_OP])
 MAX_PLATFORMS = 10
 platforms_list = [0,0,0,0,0,0,0,0,0,0,0]
 
+MAX_BULLETS = 3
+bullet_list = [0,0,0]
+
 friction_coefficent_positive = 0.05
 friction_coefficent_negative = -0.05
 YSpeed = -20
@@ -135,9 +138,6 @@ class Player(Object):
                 (vector_lenght-self.friction_negative)
                 self.vx = 0
 
-        if self.movement == "shoot":
-            pass
-
         if self.movement == "up":
             self.vy = x
             self.OnPlatform = False
@@ -165,19 +165,40 @@ class Platform(Object):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
 
+class Bullet(Object):
+    def __init__(self, img_path, xy_center, v, mass, Bullet_time):
+        # ASSIGN CLASS ATTRIBUTES
+        super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
+        self.Bullet_time = Bullet_time 
+        self.Bullet_time = 40
+
+    def update(self,player):
+        if player.movement == "shoot":
+            if player.flip == True:
+                self.vx = -8
+            else:
+                self.vx = 8
+
+        else:
+            pass
+
+        self.X = self.X + self.vx   
+        self.rect.center = (self.X, self.Y)
 
 class Enemy(Object):
-    def __init__(self, img_path, xy_center,v,mass):
+    def __init__(self, img_path, xy_center,v,mass,live):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class 
         self.time = 0
+        self.live = live
+        self.live = 3
 
     def update(self, platform):
-        if self.time == 500:
+        if self.time == random.randint(300,600):
             self.vx = self.vx * -1
             self.time = 0
 
-        elif self.X <= BoarderL and self.X >= BoarderR:
+        elif self.X <= BoarderL or self.X >= BoarderR:
             self.vx = self.vx * -1
             self.time = 0
             
@@ -219,10 +240,12 @@ class Game:
     def play(self):
 
         ## Player ##
-        player= Player(os.path.join(PATH,"FigtherJumpanrunGame.png"),[900,550],[SPEED[0],SPEED[1]],1)
+        player = Player(os.path.join(PATH,"FigtherJumpanrunGame.png"),[900,550],[SPEED[0],SPEED[1]],1)
+
+        ## Bullet ##
+        Bullets = pygame.sprite.Group()
 
         ## Platform ##
-
         for c in range(MAX_PLATFORMS):
             randomXD = random.randint(40,80)
             randomX_position = c* random.randint(20,98)
@@ -240,18 +263,17 @@ class Game:
             Platforms.add(c)
 
         ## Enemy ##
-        enemys_position_list = [[400,550],[600, 550],[800, 550]]
-        enemys_list = [0, 0, 0]
-        enemys_speed_list = [[0.8,0],[-0.8,0],[-0.8,0]]
-
-        for i in range(len(enemys_list)):
-            enemys_list[i] = Enemy(os.path.join(
-                PATH, "Enemy.png"), enemys_position_list[i],enemys_speed_list[i],1)
-
         # create Enemys Sprite Group
         Enemys = pygame.sprite.Group()
-        for c in enemys_list:
-            Enemys.add(c)
+        Enemys_xSpeed = 0.3
+
+        for i in range(4):
+            Enemys_xSpeed = Enemys_xSpeed * -1
+            randomXSPEED = Enemys_xSpeed * 1
+            randomXE_position = random.randint(20,800)
+
+            enemy = Enemy(os.path.join(PATH, "Enemy.png"), [randomXE_position, 600],[randomXSPEED, 0],1, 3)
+            Enemys.add(enemy)
 
         Score = 0
         while True:
@@ -272,8 +294,8 @@ class Game:
                     if event.key == pygame.K_RIGHT:
                         player.movement = "right"
                         player.flip = False
-                        
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                     
+                    if event.key == pygame.K_UP :
 
                         if player.OnPlatform == True:
                             player.OnPlatform = False 
@@ -282,8 +304,11 @@ class Game:
                         else:
                             pass
                     
-                    if event.key == pygame.K_LSHIFT:
+                    if event.key == pygame.K_w:
                         player.movement = "shoot"
+                        bullet = Bullet(os.path.join(PATH,"Bullet.png"),[player.X, player.Y],[0,0],1,0)
+                        if len(Bullets) < 5:
+                            Bullets.add(bullet)  
                         
                 if event.type == pygame.KEYUP:
 
@@ -309,25 +334,40 @@ class Game:
                     player.OnPlatform = True 
                     IndexOfCollisionPlatform = i
 
-            for i in range(len(enemys_list)):
+            for enemy in Enemys:
                 for b in range(len(platforms_list)):
-                    if pygame.sprite.collide_mask(platforms_list[b],enemys_list[i]):
-                        enemys_list[i].OnPlatform = True
+                    if pygame.sprite.collide_mask(platforms_list[b],enemy):
+                        enemy.OnPlatform = True
                         IndexOfCollisionPlatform_2 = b
 
                 Enemys.update(platforms_list[IndexOfCollisionPlatform_2])  
 
-            b = 0
-            while b < len(enemys_list):
-                if pygame.sprite.collide_mask(player,enemys_list[b]):
-                    enemys_list.pop(b)
-                    Score += 50
-                else:
-                    b = len(enemys_list)
+            for bullet in Bullets:
+                for enemy in Enemys:
+                    if pygame.sprite.collide_mask(bullet,enemy):
+                        Bullets.remove(bullet)
+                        enemy.live -= 1
 
-            Enemys = pygame.sprite.Group()
-            for c in enemys_list:
-                Enemys.add(c)
+                        if enemy.live == 0:
+                            Enemys.remove(enemy)
+                            Score += 50
+
+                bullet.Bullet_time -= 1
+
+                if bullet.Bullet_time == 0:
+                    Bullets.remove(bullet)
+
+                bullet.update(player)
+                self.screen.blit(bullet.image,bullet.rect)
+
+            if len(Enemys) < 4:
+                Enemys_xSpeed = Enemys_xSpeed * -1
+                randomXSPEED = Enemys_xSpeed * 1
+                randomXE_position = random.randint(20,980)
+
+                enemy = Enemy(os.path.join(PATH, "Enemy.png"), [randomXE_position, 550],[randomXSPEED, 0],1, 3)
+                Enemys.add(enemy)
+
 
             Enemys.draw(self.screen)
          
