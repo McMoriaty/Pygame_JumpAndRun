@@ -37,7 +37,7 @@ YELLOW = (255, 215, 0)
 DARKGREEN = (0, 205, 155)
 
 # Framerate #
-FPS = 100
+FPS = 150
 TIME_DELAY = int(1000 / FPS)
 
 # Constants #
@@ -150,7 +150,7 @@ class Player(Object):
                 self.movementY = " "
                 x = 0
             
-            if self.vy >= 4:
+            if self.vy >= 3:
                 x = 0
 
         elif self.OnPlatform == True:
@@ -174,6 +174,11 @@ class Platform(Object):
         self.distance = distance
 
 class Button(Object):
+    def __init__(self, img_path, xy_center, v,mass):
+        # ASSIGN CLASS ATTRIBUTES
+        super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
+
+class Heart(Object):
     def __init__(self, img_path, xy_center, v,mass):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
@@ -266,6 +271,16 @@ class Game:
 
         ## Bullet ##
         Bullets = pygame.sprite.Group()
+
+        ## Heart ##
+        Hearts = pygame.sprite.Group()
+        hearts_position_list = [[450,50],[500,50],[550,50]]
+
+        for i in range(3):
+            heart= Heart(os.path.join(
+                "data", "Heart.png"), hearts_position_list[i],[0,0],1)
+
+            Hearts.add(heart)
 
         ## Button ##
         button= Button(os.path.join("data","Playbutton.png"),[500,500],[0,0],1)
@@ -441,6 +456,7 @@ class Game:
                                 self.screen.blit(pygame.transform.flip(player.image, player.flip, False), player.rect)
                                 Enemys.draw(self.screen)
                                 Bullets.draw(self.screen)
+                                Hearts.draw(self.screen)
                                 
                                 player.update(platforms_list[IndexOfCollisionPlatform])
                                 
