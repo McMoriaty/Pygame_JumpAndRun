@@ -37,7 +37,7 @@ YELLOW = (255, 215, 0)
 DARKGREEN = (0, 205, 155)
 
 # Framerate #
-FPS = 40
+FPS = 100
 TIME_DELAY = int(1000 / FPS)
 
 # Constants #
@@ -108,24 +108,28 @@ class Object(pygame.sprite.Sprite):
         self.dead = False
 
 class Player(Object):
-    def __init__(self, img_path, xy_center, v, mass):
+    def __init__(self, img_path, xy_center, v, mass,live):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v, mass)  # call __init__ of parent class 
 
         self.movement = " "
+        self.movementX = " "
+        self.movementY = " "
         self.jumpingspeed = -20
         self.flip = False
+        self.live = live
+        self.live = 10
         
     def update(self, platform):
         x= -20
         
         vector_lenght = np.sqrt((self.vx**2))
 
-        if self.movement == "left"and self.X >= BoarderL:
-            self.vx = -2
+        if self.movementX == "left"and self.X >= BoarderL:
+            self.vx = -5
 
-        elif self.movement == "right" and self.X <= BoarderR:
-            self.vx = 2
+        elif self.movementX == "right" and self.X <= BoarderR:
+            self.vx = 5
 
         else:
             if self.vx <= friction_coefficent_positive:
@@ -138,18 +142,21 @@ class Player(Object):
                 (vector_lenght-self.friction_negative)
                 self.vx = 0
 
-        if self.movement == "up":
+        if self.movementY == "up":
             self.vy = x
             self.OnPlatform = False
             
             if self.vy <= -12:
-                self.movement = " "
+                self.movementY = " "
+                x = 0
+            
+            if self.vy >= 4:
                 x = 0
 
         elif self.OnPlatform == True:
             if self.Y < platform.rect.top :
                 self.vy = 0
-                self.Y = platform.rect.top - 28
+                self.Y = platform.rect.top - platform.distance
 
             else:
                 self.OnPlatform = False
@@ -161,9 +168,20 @@ class Player(Object):
         self.rect.center = (self.X, self.Y)
 
 class Platform(Object):
+    def __init__(self, img_path, xy_center, v,mass, distance):
+        # ASSIGN CLASS ATTRIBUTES
+        super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
+        self.distance = distance
+
+class Button(Object):
     def __init__(self, img_path, xy_center, v,mass):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
+        
+class Background(Object):
+    def __init__(self, img_path, xy_center,v,mass):
+        # ASSIGN CLASS ATTRIBUTES
+        super().__init__(img_path, xy_center,v,mass) # call __init__ of parent class
 
 class Bullet(Object):
     def __init__(self, img_path, xy_center, v, mass, Bullet_time):
@@ -175,9 +193,9 @@ class Bullet(Object):
     def update(self,player):
         if player.movement == "shoot":
             if player.flip == True:
-                self.vx = -8
+                self.vx = -20
             else:
-                self.vx = 8
+                self.vx = 20
 
         else:
             pass
@@ -239,11 +257,18 @@ class Game:
     
     def play(self):
 
+        cooltime = time.time()
+
         ## Player ##
-        player = Player(os.path.join(PATH,"FigtherJumpanrunGame.png"),[900,550],[SPEED[0],SPEED[1]],1)
+        Players = pygame.sprite.Group()
+        player = Player(os.path.join(PATH,"FigtherJumpanrunGame.png"),[900,550],[SPEED[0],SPEED[1]],1,10)
+        Players.add(player)
 
         ## Bullet ##
         Bullets = pygame.sprite.Group()
+
+        ## Button ##
+        button= Button(os.path.join("data","Playbutton.png"),[500,500],[0,0],1)
 
         ## Platform ##
         for c in range(MAX_PLATFORMS):
@@ -252,10 +277,10 @@ class Game:
             randomY_position = random.randint(300,720 - randomXD)
 
             platforms_list[c] = Platform(os.path.join(
-                PATH,"rectangle_l=60_w=20_col=0_0_0.png"), [randomX_position,randomY_position],[0,0],1)
+                PATH,"Platform.png"), [randomX_position,randomY_position],[0,0],1,22)
 
         platforms_list[MAX_PLATFORMS] = Platform(os.path.join(
-            PATH, "ground_Panel.png"), [900,900],[0,0],1)
+            PATH, "ground_Panel.png"), [900,900],[0,0],1,28)
 
         # create Platform Sprite Group
         Platforms = pygame.sprite.Group()
@@ -265,118 +290,170 @@ class Game:
         ## Enemy ##
         # create Enemys Sprite Group
         Enemys = pygame.sprite.Group()
-        Enemys_xSpeed = 0.3
+        Enemys_xSpeed = 1
 
         for i in range(4):
             Enemys_xSpeed = Enemys_xSpeed * -1
             randomXSPEED = Enemys_xSpeed * 1
             randomXE_position = random.randint(20,800)
 
-            enemy = Enemy(os.path.join(PATH, "Enemy.png"), [randomXE_position, 600],[randomXSPEED, 0],1, 3)
+            enemy = Enemy(os.path.join(PATH, "Enemy.png"), [randomXE_position, 750],[randomXSPEED, 0],1, 3)
             Enemys.add(enemy)
 
-        Score = 0
+        ## Backgrounds ##
+        backgrounds_list= [0, 0]
+        backgrounds_names_list = ["Planet_Meriec.png","Levels.png"]
+        backgrounds_position_list = [[500,500],[500,500]]
+
+        for i in range(len(backgrounds_list)):
+            backgrounds_list[i] = Background(os.path.join(
+                "data", backgrounds_names_list[i]), backgrounds_position_list[i],[0,0],1)
+
+        Backgrounds = pygame.sprite.Group()
+        for c in backgrounds_list:
+            Backgrounds.add(c)
+
         while True:
-            IndexOfCollisionPlatform = 0
-            IndexOfCollisionPlatform_2 = 0
-            
+            # KEY EVENTS
             for event in pygame.event.get():
+
+                clickdetection = Rect(400,450,200,100)
 
                 if pygame.key.get_pressed()[pygame.K_ESCAPE] == True:
                     self.quit()
 
-                if event.type == pygame.KEYDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if clickdetection.collidepoint(event.pos) == 1:
+                        IndexOfCollisionPlatform = 0
 
-                    if event.key == pygame.K_LEFT:
-                        player.movement = "left"   
-                        player.flip = True 
+                        GameOver = False
+                        Score = 0
 
-                    if event.key == pygame.K_RIGHT:
-                        player.movement = "right"
-                        player.flip = False
-                     
-                    if event.key == pygame.K_UP :
+                        while True:
 
-                        if player.OnPlatform == True:
-                            player.OnPlatform = False 
-                            player.movement = "up"
+                            IndexOfCollisionPlatform = 0
+                            IndexOfCollisionPlatform_2 = 0
+                            pygame.time.delay(TIME_DELAY)
+                            
+                            for event in pygame.event.get():
 
-                        else:
-                            pass
-                    
-                    if event.key == pygame.K_w:
-                        player.movement = "shoot"
-                        bullet = Bullet(os.path.join(PATH,"Bullet.png"),[player.X, player.Y],[0,0],1,0)
-                        if len(Bullets) < 5:
-                            Bullets.add(bullet)  
-                        
-                if event.type == pygame.KEYUP:
+                                if pygame.key.get_pressed()[pygame.K_ESCAPE] == True:
+                                    self.quit()
 
-                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
-                        player.movement = " "
-                        
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                        player.movement = " "
-                        
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
-                        player.movement = " "   
+                                if event.type == pygame.KEYDOWN:
 
-                    if event.key == pygame.K_LSHIFT:
-                        player.movement = " "
+                                    if event.key == pygame.K_LEFT:
+                                        player.movementX = "left"   
+                                        player.flip = True 
 
-            self.win.fill((BLUE))
+                                    if event.key == pygame.K_RIGHT:
+                                        player.movementX = "right"
+                                        player.flip = False
+                                    
+                                    if event.key == pygame.K_UP :
 
-            for i in range(len(platforms_list)):
+                                        if player.OnPlatform == True:
+                                            player.OnPlatform = False 
+                                            player.movementY = "up"
 
-                self.screen.blit(platforms_list[i].image,platforms_list[i].rect)
+                                        else:
+                                            pass
+                                    
+                                    if event.key == pygame.K_w:
+                                        player.movement = "shoot"
+                                        bullet = Bullet(os.path.join(PATH,"Bullet.png"),[player.X, player.Y],[0,0],1,0)
+                                        if len(Bullets) < 5:
+                                            Bullets.add(bullet)  
+                                        
+                                if event.type == pygame.KEYUP:
 
-                if pygame.sprite.collide_mask(platforms_list[i],player):
-                    player.OnPlatform = True 
-                    IndexOfCollisionPlatform = i
+                                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
+                                        player.movementX = " "
+                                        
+                                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                                        player.movementX = " "
+                                        
+                                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                                        player.movementY = " "   
 
-            for enemy in Enemys:
-                for b in range(len(platforms_list)):
-                    if pygame.sprite.collide_mask(platforms_list[b],enemy):
-                        enemy.OnPlatform = True
-                        IndexOfCollisionPlatform_2 = b
+                                    if event.key == pygame.K_LSHIFT:
+                                        player.movement = " "
 
-                Enemys.update(platforms_list[IndexOfCollisionPlatform_2])  
+                            for i in range(len(platforms_list)):
 
-            for bullet in Bullets:
-                for enemy in Enemys:
-                    if pygame.sprite.collide_mask(bullet,enemy):
-                        Bullets.remove(bullet)
-                        enemy.live -= 1
+                                if pygame.sprite.collide_mask(platforms_list[i],player):
+                                    player.OnPlatform = True 
+                                    IndexOfCollisionPlatform = i
 
-                        if enemy.live == 0:
-                            Enemys.remove(enemy)
-                            Score += 50
+                            for enemy in Enemys:
+                                for b in range(len(platforms_list)):
+                                    if pygame.sprite.collide_mask(platforms_list[b],enemy):
+                                        enemy.OnPlatform = True
+                                        IndexOfCollisionPlatform_2 = b
 
-                bullet.Bullet_time -= 1
+                                for player in Players:
+                                    if pygame.sprite.collide_mask(enemy, player):
+                                        """if killcooldown == 0:
+                                            player.live -= 1
+                                            cooltime = 0
+                """
+                                        if player.live == 0 :
+                                            Players.remove(player)
+                                            GameOver = True
 
-                if bullet.Bullet_time == 0:
-                    Bullets.remove(bullet)
+                                Enemys.update(platforms_list[IndexOfCollisionPlatform_2])  
 
-                bullet.update(player)
-                self.screen.blit(bullet.image,bullet.rect)
+                            for bullet in Bullets:
+                                for enemy in Enemys:
+                                    if pygame.sprite.collide_mask(bullet,enemy):
+                                        Bullets.remove(bullet)
+                                        enemy.live -= 1
 
-            if len(Enemys) < 4:
-                Enemys_xSpeed = Enemys_xSpeed * -1
-                randomXSPEED = Enemys_xSpeed * 1
-                randomXE_position = random.randint(20,980)
+                                        if enemy.live == 0:
+                                            Enemys.remove(enemy)
+                                            Score += 50
 
-                enemy = Enemy(os.path.join(PATH, "Enemy.png"), [randomXE_position, 550],[randomXSPEED, 0],1, 3)
-                Enemys.add(enemy)
+                                bullet.Bullet_time -= 1
+
+                                if bullet.Bullet_time == 0:
+                                    Bullets.remove(bullet)
+
+                                bullet.update(player)
+ 
+                            if len(Enemys) < 4:
+                                Enemys_xSpeed = Enemys_xSpeed * -1
+                                randomXSPEED = Enemys_xSpeed * 1
+                                randomXE_position = random.randint(20,980)
+
+                                enemy = Enemy(os.path.join(PATH, "Enemy.png"), [randomXE_position, 550],[randomXSPEED, 0],1, 3)
+                                Enemys.add(enemy)
+
+                            if GameOver == True:
+                                self.win.fill((BLACK))
+
+                                draw_text("GAME OVER", 480, 400, WHITE)
+                                #draw_text("Score" + " " + str(Score), 480, 500, WHITE)
+                                
+                                
+                            else:
+                                self.screen.blit(backgrounds_list[1].image,backgrounds_list[1].rect)
+                                Platforms.draw(self.screen)
+                                self.screen.blit(pygame.transform.flip(player.image, player.flip, False), player.rect)
+                                Enemys.draw(self.screen)
+                                Bullets.draw(self.screen)
+                                
+                                player.update(platforms_list[IndexOfCollisionPlatform])
+                                
+                                #draw_text("Time" + " " + str(round(killcooldown)), 20, 20, BLACK)
+                                draw_text("Score" + " " + str(Score), 890, 20, WHITE)
+
+                            pygame.display.update()
 
 
-            Enemys.draw(self.screen)
-         
-            self.screen.blit(pygame.transform.flip(player.image, player.flip, False), player.rect)
-            player.update(platforms_list[IndexOfCollisionPlatform])
+                self.screen.blit(backgrounds_list[0].image,backgrounds_list[0].rect)
+                self.screen.blit(button.image,button.rect)
 
-            draw_text("Score" + " " + str(Score), 500, 80, BLACK)
-
-            pygame.display.update()
+                pygame.display.update()
 
 if __name__ == "__main__":
     Game().play()  
