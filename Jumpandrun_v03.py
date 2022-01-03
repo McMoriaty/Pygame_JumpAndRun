@@ -115,7 +115,8 @@ class Player(Object):
         self.jumpingspeed = -20
         self.flip = False
         self.live = live
-        self.live = 10
+        self.live = 3
+        self.killcooldown = 100
         
     def update(self, platform):
         x= -20
@@ -258,7 +259,7 @@ class Game:
     
     def play(self):
 
-        cooltime = time.time()
+        high_score = 0
 
         ## Player ##
         Players = pygame.sprite.Group() # create Players Sprite Group
@@ -272,7 +273,7 @@ class Game:
         Hearts = pygame.sprite.Group()  # create Hearts Sprite Group
         hearts_position_list = [[450,50],[500,50],[550,50]]
 
-        for i in range(3):
+        for i in range(1):
             heart= Heart(os.path.join(
                 "data", "Heart.png"), hearts_position_list[i],[0,0],1)
 
@@ -311,9 +312,9 @@ class Game:
             Enemys.add(enemy)
 
         ## Backgrounds ##
-        backgrounds_list= [0, 0]
-        backgrounds_names_list = ["Planet_Meriec.png","Levels.png"]
-        backgrounds_position_list = [[500,500],[500,500]]
+        backgrounds_list= [0, 0, 0]
+        backgrounds_names_list = ["Planet_Meriec.png","Levels.png","END.png"]
+        backgrounds_position_list = [[500,500],[500,500],[500,500]]
 
         for i in range(len(backgrounds_list)):
             backgrounds_list[i] = Background(os.path.join(
@@ -322,6 +323,8 @@ class Game:
         Backgrounds = pygame.sprite.Group() #create Backgrounds Sprite Group
         for c in backgrounds_list:
             Backgrounds.add(c)
+
+        countdown = 1
 
         while True:
             # KEY EVENTS
@@ -336,7 +339,9 @@ class Game:
                     if clickdetection.collidepoint(event.pos) == 1:
                         IndexOfCollisionPlatform = 0
                         GameOver = False
+                        
                         Score = 0
+                        livecountdown = 10
 
                         while True:
 
@@ -358,6 +363,9 @@ class Game:
                                     if event.key == pygame.K_RIGHT:
                                         player.movementX = "right"
                                         player.flip = False
+
+                                    if pygame.key.get_pressed()[pygame.K_r] == True:
+                                        Game().play()
                                     
                                     if event.key == pygame.K_UP :
 
@@ -402,13 +410,24 @@ class Game:
 
                                 for player in Players:
                                     if pygame.sprite.collide_mask(enemy, player):
-                                        """if killcooldown == 0:
-                                            player.live -= 1
-                                            cooltime = 0
-                """
-                                        if player.live == 0 :
+                                        livecountdown -= countdown
+                                        if livecountdown <= 0:
+                                            countdown = 0
+
+                                        print(livecountdown)
+
+                                        if livecountdown == 0:
+                                            Hearts.remove(heart)
+                                            player.live -= 1 
+                                            enemy.live -= 1 
+                                            countdown = 1
+                                            livecountdown = 5
+
+                                        if player.live == -1 :
                                             Players.remove(player)
                                             GameOver = True
+
+                                    player.killcooldown -= 1
 
                                 Enemys.update(platforms_list[IndexOfCollisionPlatform_2])  
 
@@ -438,10 +457,17 @@ class Game:
                                 Enemys.add(enemy)
 
                             if GameOver == True:
-                                self.win.fill((BLACK))
+                                self.screen.blit(backgrounds_list[2].image,backgrounds_list[2].rect)
 
+                                draw_text("Score" + " " + str(Score), 490, 500, WHITE)
+                                draw_text("To Quit Press ESC", 460, 600, WHITE)
                                 draw_text("GAME OVER", 480, 400, WHITE)
-                                #draw_text("Score" + " " + str(Score), 480, 500, WHITE)
+                                draw_text("To Restart press R", 480, 700, WHITE)
+
+                                if Score > high_score:
+                                    high_score = Score
+
+                                draw_text("High Score" + " " + str(high_score), 470, 550, WHITE)
                                 
                             else:
                                 self.screen.blit(backgrounds_list[1].image,backgrounds_list[1].rect)
@@ -452,9 +478,9 @@ class Game:
                                 Hearts.draw(self.screen)
                                 
                                 player.update(platforms_list[IndexOfCollisionPlatform])
-                                
-                                #draw_text("Time" + " " + str(round(killcooldown)), 20, 20, BLACK)
+
                                 draw_text("Score" + " " + str(Score), 890, 20, WHITE)
+                                draw_text("High Score" + " " + str(high_score), 890, 100, WHITE)
 
                             pygame.display.update()
 
