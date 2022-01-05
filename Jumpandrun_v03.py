@@ -480,7 +480,6 @@ class Game:
                                 player.update(platforms_list[IndexOfCollisionPlatform])
 
                                 draw_text("Score" + " " + str(Score), 890, 20, WHITE)
-                                draw_text("High Score" + " " + str(high_score), 890, 100, WHITE)
 
                             pygame.display.update()
 
