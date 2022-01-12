@@ -50,6 +50,7 @@ SPEED_OP = np.array([sx_OP,sy_OP])
 
 MAX_PLATFORMS = 10
 platforms_list = [0,0,0,0,0,0,0,0,0,0,0]
+distance = 30
 
 MAX_BULLETS = 3
 bullet_list = [0,0,0]
@@ -153,11 +154,14 @@ class Player(Object):
 
         elif self.OnPlatform == True:
             if self.Y < platform.rect.top :
+                
                 self.vy = 0
                 self.Y = platform.rect.top - platform.distance
 
             else:
                 self.OnPlatform = False
+
+        print(self.OnPlatform)
         
         self.vy = self.vy + Grafitation
 
@@ -171,6 +175,10 @@ class Platform(Object):
         super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
         self.distance = distance
 
+    def update(self):
+        self.Y = self.Y
+        self.X = self.X
+        self.rect.center = (self.X, self.Y)
 class Button(Object):
     def __init__(self, img_path, xy_center, v,mass):
         # ASSIGN CLASS ATTRIBUTES
@@ -224,12 +232,8 @@ class Enemy(Object):
             self.time = 0
             
         if self.OnPlatform == True:
-            if self.Y < platform.rect.bottom - 15 :
-                self.vy = 0
-                self.Y = platform.rect.top - 15
-
-            else:
-                self.OnPlatform = False
+            self.vy = 0
+            self.Y = platform.rect.top - 15
 
         self.time += 1
         
@@ -286,10 +290,11 @@ class Game:
         for c in range(MAX_PLATFORMS):
             randomXD = random.randint(40,80)
             randomX_position = c* random.randint(20,98)
-            randomY_position = random.randint(300,720 - randomXD)
+            randomY_position = random.randint(300,720 - randomXD)     
 
             platforms_list[c] = Platform(os.path.join(
                 PATH,"Platform.png"), [randomX_position,randomY_position],[0,0],1,22)
+                    
 
         platforms_list[MAX_PLATFORMS] = Platform(os.path.join(
             PATH, "ground_Panel.png"), [900,900],[0,0],1,28)
@@ -297,7 +302,7 @@ class Game:
         # create Platform Sprite Group
         Platforms = pygame.sprite.Group()  # create Platforms Sprite Group
         for c in platforms_list:
-            Platforms.add(c)
+            Platforms.add(c)   
 
         ## Enemy ##
         Enemys = pygame.sprite.Group() # create Enemys Sprite Group
@@ -343,6 +348,15 @@ class Game:
                         Score = 0
                         livecountdown = 10
 
+                        for c in range(len(platforms_list)-1):
+                            for i in range(len(platforms_list)-1):
+                                if pygame.sprite.collide_mask(platforms_list[c],platforms_list[i]):
+                                    platforms_list[c].Y = random.randint(300,650)
+                                    platforms_list[c].X = random.randint(200,800)
+                                    platforms_list[c].update()
+                                    c = 0
+                                    i = 0
+                                    
                         while True:
 
                             IndexOfCollisionPlatform = 0
@@ -363,6 +377,7 @@ class Game:
                                     if event.key == pygame.K_RIGHT:
                                         player.movementX = "right"
                                         player.flip = False
+
 
                                     if pygame.key.get_pressed()[pygame.K_r] == True:
                                         Game().play()
@@ -396,8 +411,10 @@ class Game:
                                     if event.key == pygame.K_LSHIFT:
                                         player.movement = " "
 
-                            for i in range(len(platforms_list)):
 
+                            player.OnPlatform = False
+
+                            for i in range(len(platforms_list)):
                                 if pygame.sprite.collide_mask(platforms_list[i],player):
                                     player.OnPlatform = True 
                                     IndexOfCollisionPlatform = i
@@ -427,6 +444,7 @@ class Game:
                                             Players.remove(player)
                                             GameOver = True
 
+                                    
                                     player.killcooldown -= 1
 
                                 Enemys.update(platforms_list[IndexOfCollisionPlatform_2])  
