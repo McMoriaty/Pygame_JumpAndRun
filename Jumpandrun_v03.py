@@ -153,15 +153,13 @@ class Player(Object):
                 x = 0
 
         elif self.OnPlatform == True:
+
             if self.Y < platform.rect.top :
-                
                 self.vy = 0
                 self.Y = platform.rect.top - platform.distance
 
             else:
                 self.OnPlatform = False
-
-        print(self.OnPlatform)
         
         self.vy = self.vy + Grafitation
 
@@ -287,14 +285,10 @@ class Game:
         button= Button(os.path.join("data","Playbutton.png"),[500,500],[0,0],1)
 
         ## Platform ##
+        Platform_position_list = [[300,400],[500,500],[500,600],[700,550],[800,600],[850,500],[100,550],[200,640],[250,500],[300,600]]
         for c in range(MAX_PLATFORMS):
-            randomXD = random.randint(40,80)
-            randomX_position = c* random.randint(20,98)
-            randomY_position = random.randint(300,720 - randomXD)     
-
             platforms_list[c] = Platform(os.path.join(
-                PATH,"Platform.png"), [randomX_position,randomY_position],[0,0],1,22)
-                    
+                PATH,"Platform.png"), Platform_position_list[c],[0,0],1,22)             
 
         platforms_list[MAX_PLATFORMS] = Platform(os.path.join(
             PATH, "ground_Panel.png"), [900,900],[0,0],1,28)
@@ -350,12 +344,14 @@ class Game:
 
                         for c in range(len(platforms_list)-1):
                             for i in range(len(platforms_list)-1):
-                                if pygame.sprite.collide_mask(platforms_list[c],platforms_list[i]):
-                                    platforms_list[c].Y = random.randint(300,650)
-                                    platforms_list[c].X = random.randint(200,800)
+                                if pygame.sprite.collide_mask(platforms_list[i],platforms_list[c]):
+                                    while True:
+                                        if pygame.sprite.collide_mask(platforms_list[i],platforms_list[c]) != True:
+                                            print(platforms_list[c].Y)
+                                            break
+                                        platforms_list[c].Y = random.randint(300,650)
+                                        platforms_list[c].X = random.randint(200,800)
                                     platforms_list[c].update()
-                                    c = 0
-                                    i = 0
                                     
                         while True:
 
