@@ -104,7 +104,6 @@ class Object(pygame.sprite.Sprite):
 
         self.killed = False
         self.dead = False
-
 class Player(Object):
     def __init__(self, img_path, xy_center, v, mass,live):
         # ASSIGN CLASS ATTRIBUTES
@@ -121,7 +120,6 @@ class Player(Object):
         
     def update(self, platform):
         x= -20
-        
         vector_lenght = np.sqrt((self.vx**2))
 
         if self.movementX == "left"and self.X >= BoarderL:
@@ -197,21 +195,21 @@ class Bullet(Object):
         # ASSIGN CLASS ATTRIBUTES
         super().__init__(img_path, xy_center, v,mass) # call __init__ of parent class
         self.Bullet_time = Bullet_time 
-        self.Bullet_time = 40
+        self.Bullet_time = 30
 
     def update(self,player):
         if player.movement == "shoot":
             if player.flip == True:
                 self.vx = -20
+                player.movement == "  "
             else:
                 self.vx = 20
-
+                player.movement == "  "
         else:
             pass
 
         self.X = self.X + self.vx   
         self.rect.center = (self.X, self.Y)
-
 class Enemy(Object):
     def __init__(self, img_path, xy_center,v,mass,live):
         # ASSIGN CLASS ATTRIBUTES
@@ -265,7 +263,7 @@ class Game:
 
         ## Player ##
         Players = pygame.sprite.Group() # create Players Sprite Group
-        player = Player(os.path.join(PATH,"FigtherJumpanrunGame.png"),[900,550],[SPEED[0],SPEED[1]],1,10)
+        player = Player(os.path.join(PATH,"FigtherJumpanrunGame2.png"),[900,550],[SPEED[0],SPEED[1]],1,10)
         Players.add(player)
 
         ## Bullet ##
@@ -275,7 +273,7 @@ class Game:
         Hearts = pygame.sprite.Group()  # create Hearts Sprite Group
         hearts_position_list = [[450,50],[500,50],[550,50]]
 
-        for i in range(1):
+        for i in range(2):
             heart= Heart(os.path.join(
                 "data", "Heart.png"), hearts_position_list[i],[0,0],1)
 
@@ -340,7 +338,7 @@ class Game:
                         GameOver = False
                         
                         Score = 0
-                        livecountdown = 10
+                        livecountdown = 4
 
                         for c in range(len(platforms_list)-1):
                             for i in range(len(platforms_list)-1):
@@ -358,6 +356,7 @@ class Game:
                             IndexOfCollisionPlatform = 0
                             IndexOfCollisionPlatform_2 = 0
                             pygame.time.delay(TIME_DELAY)
+                            XPosition = 0
                             
                             for event in pygame.event.get():
 
@@ -368,12 +367,13 @@ class Game:
 
                                     if event.key == pygame.K_LEFT:
                                         player.movementX = "left"   
-                                        player.flip = True 
-
+                                        player.flip = True
+                                        
                                     if event.key == pygame.K_RIGHT:
                                         player.movementX = "right"
-                                        player.flip = False
-
+                                     
+                                        player.flip = False                                       
+                                        
 
                                     if pygame.key.get_pressed()[pygame.K_r] == True:
                                         Game().play()
@@ -395,18 +395,17 @@ class Game:
                                         
                                 if event.type == pygame.KEYUP:
 
-                                    if event.key == pygame.K_LEFT or event.type == pygame.K_a:
+                                    if event.key == pygame.K_LEFT:
                                         player.movementX = " "
                                         
-                                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                                    if event.key == pygame.K_RIGHT:
                                         player.movementX = " "
                                         
-                                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                                    if event.key == pygame.K_UP:
                                         player.movementY = " "   
 
-                                    if event.key == pygame.K_LSHIFT:
+                                    if event.key == pygame.K_w:
                                         player.movement = " "
-
 
                             player.OnPlatform = False
 
@@ -439,8 +438,7 @@ class Game:
                                         if player.live == -1 :
                                             Players.remove(player)
                                             GameOver = True
-
-                                    
+                                  
                                     player.killcooldown -= 1
 
                                 Enemys.update(platforms_list[IndexOfCollisionPlatform_2])  
